@@ -67,11 +67,12 @@
           "uid": "${DS_PROMETHEUS}"
         },
         "query": {
-          "query": "label_values(matelot_pipeline_jobs_total{cell=\"$cell\"}, kind)",
+          "query": "query_result(sum by (kind) (matelot_pipeline_jobs_total{cell=\"$cell\"}) > 0)",
           "refId": "kind"
         },
-        "definition": "label_values(matelot_pipeline_jobs_total{cell=\"$cell\"}, kind)",
-        "refresh": 1,
+        "definition": "query_result(sum by (kind) (matelot_pipeline_jobs_total{cell=\"$cell\"}) > 0)",
+        "regex": "/kind=\"([^\"]+)\"/",
+        "refresh": 2,
         "sort": 1,
         "includeAll": true,
         "multi": true,
@@ -114,7 +115,7 @@
     {
       "title": "Observability guide",
       "type": "link",
-      "url": "https://matelot-cloud.github.io/website/docs/latest/observability.html",
+      "url": "https://matelot.cloud/docs/latest/observability.html",
       "targetBlank": true
     }
   ],
@@ -131,7 +132,7 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "Every pipeline is **one trace** under service `matelot-pipeline` (api, runner and worker spans together). From here: the exemplars on the duration panels (the dots) open the trace of that very job in Tempo; Explore \u2192 Tempo \u2192 search service `matelot-pipeline`, or TraceQL `{ resource.service.name = \"matelot-pipeline\" && span.matelot.pipeline.status = \"failed\" }` for the failed ones. [How the trace is built](https://matelot-cloud.github.io/website/docs/latest/observability.html#traces)."
+        "content": "Every pipeline is **one trace** under service `matelot-pipeline` (api, runner and worker spans together). From here: the exemplars on the duration panels (the dots) open the trace of that very job in Tempo; Explore \u2192 Tempo \u2192 search service `matelot-pipeline`, or TraceQL `{ resource.service.name = \"matelot-pipeline\" && span.matelot.pipeline.status = \"failed\" }` for the failed ones. [How the trace is built](https://matelot.cloud/docs/latest/observability.html#traces)."
       }
     },
     {
@@ -161,7 +162,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le, kind) (rate(matelot_pipeline_job_duration_seconds_bucket{kind=~\"$kind\", cell=\"$cell\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le, kind) (rate(matelot_pipeline_job_duration_seconds_bucket{kind=~\"$kind\", cell=\"$cell\"}[$__rate_interval]))) >= 0",
           "legendFormat": "{{kind}}",
           "refId": "A",
           "range": true,
@@ -232,7 +233,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile(0.5, sum by (le, kind) (rate(matelot_pipeline_job_duration_seconds_bucket{kind=~\"$kind\", cell=\"$cell\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.5, sum by (le, kind) (rate(matelot_pipeline_job_duration_seconds_bucket{kind=~\"$kind\", cell=\"$cell\"}[$__rate_interval]))) >= 0",
           "legendFormat": "{{kind}}",
           "refId": "A",
           "range": true,
@@ -440,7 +441,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le, kind) (rate(matelot_pipeline_job_queue_wait_seconds_bucket{kind=~\"$kind\", cell=\"$cell\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le, kind) (rate(matelot_pipeline_job_queue_wait_seconds_bucket{kind=~\"$kind\", cell=\"$cell\"}[$__rate_interval]))) >= 0",
           "legendFormat": "{{kind}}",
           "refId": "A",
           "range": true,
@@ -511,7 +512,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le, kind) (rate(matelot_runner_job_duration_seconds_bucket{kind=~\"$kind\", phase=\"total\", cell=\"$cell\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le, kind) (rate(matelot_runner_job_duration_seconds_bucket{kind=~\"$kind\", phase=\"total\", cell=\"$cell\"}[$__rate_interval]))) >= 0",
           "legendFormat": "{{kind}}",
           "refId": "A",
           "range": true,
@@ -817,7 +818,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le, status) (rate(matelot_pipeline_duration_seconds_bucket{cell=\"$cell\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le, status) (rate(matelot_pipeline_duration_seconds_bucket{cell=\"$cell\"}[$__rate_interval]))) >= 0",
           "legendFormat": "{{status}}",
           "refId": "A",
           "range": true,

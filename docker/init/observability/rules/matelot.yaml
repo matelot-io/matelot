@@ -7,14 +7,16 @@
 groups:
   - name: matelot
     rules:
+      # one alert per cell, whatever the replica count: `up` has a series per pod, and a rollout briefly has two
       - alert: MatelotApiDown
-        expr: up{job="matelot-api"} == 0
+        expr: min by (cell) (up{job="matelot-api"}) == 0
         for: 2m
         labels: { severity: critical }
         annotations:
           summary: "API of cell {{ $labels.cell }} is not answering scrapes"
-          description: "The api target {{ $labels.instance }} has been down for 2 minutes: the web app, the CLI and the runners are without their API."
-          runbook_url: https://matelot-cloud.github.io/website/docs/latest/observability.html#alert-matelotapidown
+          description: "An api pod of cell {{ $labels.cell }} has not answered a scrape for 2 minutes: with one replica the web app, the CLI and the runners are without their API."
+          runbook_url: https://matelot.cloud/docs/latest/observability.html#alert-matelotapidown
+      # no cell label to aggregate on here: absent() yields one series, labelled job=matelot-api
       - alert: MatelotApiAbsent
         expr: absent(up{job="matelot-api"})
         for: 5m
@@ -22,23 +24,23 @@ groups:
         annotations:
           summary: "No API target is scraped"
           description: "Prometheus has no matelot-api target at all for 5 minutes: the metrics Service is gone or the ServiceMonitor is not selected (release label?)."
-          runbook_url: https://matelot-cloud.github.io/website/docs/latest/observability.html#alert-matelotapiabsent
+          runbook_url: https://matelot.cloud/docs/latest/observability.html#alert-matelotapiabsent
       - alert: MatelotWorkerDown
-        expr: up{job="matelot-worker"} == 0
+        expr: min by (cell) (up{job="matelot-worker"}) == 0
         for: 5m
         labels: { severity: critical }
         annotations:
           summary: "Worker of cell {{ $labels.cell }} is not answering scrapes"
           description: "No background work (sync, webhooks, correlation, policy evaluation, the sweeper) for 5 minutes; queued pipeline jobs of the evaluate stage do not run."
-          runbook_url: https://matelot-cloud.github.io/website/docs/latest/observability.html#alert-matelotworkerdown
+          runbook_url: https://matelot.cloud/docs/latest/observability.html#alert-matelotworkerdown
       - alert: MatelotKeycloakDown
-        expr: up{job="matelot-keycloak"} == 0
+        expr: min by (cell) (up{job="matelot-keycloak"}) == 0
         for: 2m
         labels: { severity: critical }
         annotations:
           summary: "Keycloak of cell {{ $labels.cell }} is down"
           description: "Nobody can sign in and tokens cannot be refreshed; the API keeps serving already-issued tokens until they expire."
-          runbook_url: https://matelot-cloud.github.io/website/docs/latest/observability.html#alert-matelotkeycloakdown
+          runbook_url: https://matelot.cloud/docs/latest/observability.html#alert-matelotkeycloakdown
       - alert: MatelotNoRunnerOnline
         expr: |
           (sum by (cell) (matelot_runners_online) or sum by (cell) (matelot_pipeline_jobs_queued) * 0) == 0
@@ -48,7 +50,7 @@ groups:
         annotations:
           summary: "Cell {{ $labels.cell }}: jobs are queued and no runner is online"
           description: "{{ $value }} pipeline job(s) wait for a runner and no runner has sent a heartbeat in the last minute, for 10 minutes."
-          runbook_url: https://matelot-cloud.github.io/website/docs/latest/observability.html#alert-matelotnorunneronline
+          runbook_url: https://matelot.cloud/docs/latest/observability.html#alert-matelotnorunneronline
       - alert: MatelotQueueBacklog
         expr: |
           max by (cell) (matelot_pipeline_oldest_queued_job_age_seconds) > 600
@@ -58,7 +60,7 @@ groups:
         annotations:
           summary: "Cell {{ $labels.cell }}: the oldest queued job waits for more than 10 minutes"
           description: "The oldest queued pipeline job (or BullMQ job) has waited {{ $value | humanizeDuration }}: too few runners, runners without the required tags, or a worker that stopped consuming."
-          runbook_url: https://matelot-cloud.github.io/website/docs/latest/observability.html#alert-matelotqueuebacklog
+          runbook_url: https://matelot.cloud/docs/latest/observability.html#alert-matelotqueuebacklog
       - alert: MatelotPipelineFailureRate
         expr: |
           sum by (cell) (increase(matelot_pipelines_total{status="failed"}[1h]))
@@ -69,7 +71,7 @@ groups:
         annotations:
           summary: "Cell {{ $labels.cell }}: more than half of the pipelines of the last hour failed"
           description: "{{ $value | humanizePercentage }} of at least 5 pipelines failed in the last hour (a broken scanner image, a repository the runners cannot reach, a gate that fails every run)."
-          runbook_url: https://matelot-cloud.github.io/website/docs/latest/observability.html#alert-matelotpipelinefailurerate
+          runbook_url: https://matelot.cloud/docs/latest/observability.html#alert-matelotpipelinefailurerate
       - alert: MatelotDbConnectionsHigh
         expr: |
           sum by (cell, job) (db_client_connection_count{state="used"}) > 8
@@ -79,7 +81,7 @@ groups:
         annotations:
           summary: "Cell {{ $labels.cell }}: the {{ $labels.job }} Postgres pool is nearly exhausted"
           description: "More than 8 of the 10 pool connections in use, or callers waiting for one, for 10 minutes: a slow query holding connections or a load the replica count does not cover."
-          runbook_url: https://matelot-cloud.github.io/website/docs/latest/observability.html#alert-matelotdbconnectionshigh
+          runbook_url: https://matelot.cloud/docs/latest/observability.html#alert-matelotdbconnectionshigh
       - alert: MatelotBackupFailed
         expr: |
           max by (cell) (matelot_backup_last_failure_timestamp_seconds)
@@ -89,7 +91,7 @@ groups:
         annotations:
           summary: "Cell {{ $labels.cell }}: the last backup failed"
           description: "The most recent backup run reported a failure (and no success since). The reason is in the API's backup reports and the backup Job's log."
-          runbook_url: https://matelot-cloud.github.io/website/docs/latest/observability.html#alert-matelotbackupfailed
+          runbook_url: https://matelot.cloud/docs/latest/observability.html#alert-matelotbackupfailed
       - alert: MatelotBackupTooOld
         expr: time() - max by (cell) (matelot_backup_last_success_timestamp_seconds) > 36 * 3600
         for: 1h
@@ -97,7 +99,7 @@ groups:
         annotations:
           summary: "Cell {{ $labels.cell }}: no successful backup for {{ $value | humanizeDuration }}"
           description: "The last successful backup is older than 36 hours: the schedule is off, runs fail, or backups are disabled while this rule is loaded."
-          runbook_url: https://matelot-cloud.github.io/website/docs/latest/observability.html#alert-matelotbackuptooold
+          runbook_url: https://matelot.cloud/docs/latest/observability.html#alert-matelotbackuptooold
       - alert: MatelotLicenseExpiring
         expr: matelot_license_expiry_timestamp_seconds - time() < 14 * 24 * 3600
         for: 1h
@@ -105,4 +107,4 @@ groups:
         annotations:
           summary: "Cell {{ $labels.cell }}: the licence expires in {{ $value | humanizeDuration }}"
           description: "Renew the licence key in Settings → License before it expires (the cell falls back to the Free tier)."
-          runbook_url: https://matelot-cloud.github.io/website/docs/latest/observability.html#alert-matelotlicenseexpiring
+          runbook_url: https://matelot.cloud/docs/latest/observability.html#alert-matelotlicenseexpiring

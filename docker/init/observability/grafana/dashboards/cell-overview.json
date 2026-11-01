@@ -82,7 +82,7 @@
     {
       "title": "Observability guide",
       "type": "link",
-      "url": "https://matelot-cloud.github.io/website/docs/latest/observability.html",
+      "url": "https://matelot.cloud/docs/latest/observability.html",
       "targetBlank": true
     }
   ],
@@ -885,7 +885,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile(0.5, sum by (le) (rate(http_server_request_duration_seconds_bucket{cell=\"$cell\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(http_server_request_duration_seconds_bucket{cell=\"$cell\"}[$__rate_interval]))) >= 0",
           "legendFormat": "p50",
           "refId": "A",
           "range": true,
@@ -896,7 +896,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{cell=\"$cell\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{cell=\"$cell\"}[$__rate_interval]))) >= 0",
           "legendFormat": "p95",
           "refId": "B",
           "range": true,
@@ -907,7 +907,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_request_duration_seconds_bucket{cell=\"$cell\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_request_duration_seconds_bucket{cell=\"$cell\"}[$__rate_interval]))) >= 0",
           "legendFormat": "p99",
           "refId": "C",
           "range": true,
@@ -1649,7 +1649,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le, job) (rate(db_client_operation_duration_seconds_bucket{cell=\"$cell\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le, job) (rate(db_client_operation_duration_seconds_bucket{cell=\"$cell\"}[$__rate_interval]))) >= 0",
           "legendFormat": "{{job}}",
           "refId": "A",
           "range": true,

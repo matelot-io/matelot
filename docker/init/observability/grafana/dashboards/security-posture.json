@@ -82,7 +82,7 @@
     {
       "title": "Observability guide",
       "type": "link",
-      "url": "https://matelot-cloud.github.io/website/docs/latest/observability.html",
+      "url": "https://matelot.cloud/docs/latest/observability.html",
       "targetBlank": true
     }
   ],
@@ -925,7 +925,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le, source) (rate(matelot_sbom_ingest_duration_seconds_bucket{cell=\"$cell\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le, source) (rate(matelot_sbom_ingest_duration_seconds_bucket{cell=\"$cell\"}[$__rate_interval]))) >= 0",
           "legendFormat": "{{source}}",
           "refId": "A",
           "range": true,
@@ -995,7 +995,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le, source) (rate(matelot_sbom_correlation_duration_seconds_bucket{cell=\"$cell\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le, source) (rate(matelot_sbom_correlation_duration_seconds_bucket{cell=\"$cell\"}[$__rate_interval]))) >= 0",
           "legendFormat": "{{source}}",
           "refId": "A",
           "range": true,
